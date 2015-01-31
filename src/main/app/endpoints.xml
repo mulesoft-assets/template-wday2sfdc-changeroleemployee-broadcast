@@ -5,7 +5,7 @@
       xmlns="http://www.mulesoft.org/schema/mule/core"
       xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
       xmlns:spring="http://www.springframework.org/schema/beans"
-      version="EE-3.5.1"
+      version="EE-3.5.2"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="
 http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
@@ -16,7 +16,7 @@ http://www.mulesoft.org/schema/mule/wd-hr http://www.mulesoft.org/schema/mule/wd
 http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd
 http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/current/mule-tracking-ee.xsd">
 
-	<!-- 	In this file you should declare all your inbound endpoints and from here controll the access to your application -->
+	<!-- In this file you should declare all your inbound endpoints in order to control the access to your application -->
 
 	<flow name="triggerRoleChangeFlow" processingStrategy="synchronous" doc:name="triggerRoleChangeFlow">
 		<poll doc:name="fireup Worker synchronization">
@@ -24,11 +24,11 @@ http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/m
 			<watermark variable="lastQueryDate" default-expression="${watermark.default.expression}" update-expression="#[ new java.util.Date() ]" />
 			<processor-chain doc:name="query Workers and set collection">
 				<logger message="Fetching Workday to change role... #[lastQueryDate]" level="INFO" doc:name="log 'Fetching workday updates...'"/>
-				<wd-hr:get-workers config-ref="WorkdayHumanResource" doc:name="get Workers from Workday Human Resource" workersRequest-ref="#[org.mule.kicks.ChangeRoleEmployeeRequest.create(lastQueryDate, ${poll.frequencyMillis})]"></wd-hr:get-workers>
+				<wd-hr:get-workers config-ref="WorkdayHumanResource" doc:name="get Workers from Workday Human Resource" workersRequest-ref="#[org.mule.templates.ChangeRoleEmployeeRequest.create(lastQueryDate, ${poll.frequencyMillis})]"></wd-hr:get-workers>
                 <data-mapper:transform config-ref="transform_Workday_workers_for_rolechange" doc:name="transform Workday workers to map of values for role change in Salesforce"/>
 			</processor-chain>
 		</poll>
-        <custom-filter doc:name="Custom component to filter duplicate workers" class="org.mule.kicks.WorkersDeduplicationFilter"/>
+        <custom-filter doc:name="Custom component to filter duplicate workers" class="org.mule.templates.WorkersDeduplicationFilter"/>
         <flow-ref name="roleChangeFlow" doc:description="roleChangeFlow"  doc:name="roleChangeFlow"/>
     </flow>
 
