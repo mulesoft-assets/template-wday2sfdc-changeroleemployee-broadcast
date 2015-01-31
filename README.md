@@ -26,7 +26,17 @@ Note that using this template is subject to the conditions of this [License Agre
 Please review the terms of the license before downloading and using this template. In short, you are allowed to use the template for free with Mule ESB Enterprise Edition, CloudHub, or as a trial in Anypoint Studio.
 
 # Use Case <a name="usecase"/>
-I want to syncronize Employees between Workday and Salesfoce.
+This Anypoint Template should serve as a foundation for setting an online sync of Employee Role Changes from Workday to Salesforce Users.
+
+Every time there is a change in an already existing Employee in Workday, the integration will poll for them in the source instance and it will be responsible for updating the Change Role for the User in Salesforce.
+
+Requirements have been set not only to be used as examples, but also to establish a starting point to adapt your integration to your requirements.
+
+As implemented, this Anypoint Template leverages the [Batch Module](http://www.mulesoft.org/documentation/display/current/Batch+Processing). The batch job is divided in Input, Process and On Complete stages.
+
+The Template retrieves all updated Employees since last poll, checks for duplicates and triggers the Batch process. During the Batch Process stage, in the first step the different Employees are matched by email with the existing Users in Salesforce. In the second step the PermissionSet for the users are updated to Salesforce using a Batch Commit.
+
+Finally during the On Complete stage the Anypoint Template will log output statistics data into the console.
 
 # Considerations <a name="considerations"/>
 
@@ -138,17 +148,8 @@ In order to use this Mule Anypoint Template you need to configure properties (Cr
 + sfdc.securityToken `1234fdkfdkso20kw2sd`
 + sfdc.url `https://login.salesforce.com/services/Soap/u/28.0`
 
-+ sfdc.localeSidKey `en_US`
-+ sfdc.languageLocaleKey `en_US`
-+ sfdc.timeZoneSidKey `America/New_York`
-+ sfdc.emailEncodingKey `ISO-8859-1`
-
-+ sfdc.owner.id `10000000002D3JWAA0`
-+ sfdc.user.profile.id `10000000002D4JWAA0`
-+ sfdc.user.permission.id `10000000002D5JWAA0`
-
 #### Roles Map
-+ wday.sfdc.rolesMap=['SOME_ROLE_IN_WDAY': 'SOME_ROLE_IN_SF', 'ANOTHER_ROLE_IN_WDAY': 'ANOTHER_ROLE_IN_SF' ]
++ wday.sfdc.rolesMap `['SOME_ROLE_IN_WDAY': 'SOME_ROLE_IN_SF', 'ANOTHER_ROLE_IN_WDAY': 'ANOTHER_ROLE_IN_SF' ]`
 
 # API Calls <a name="apicalls"/>
 Salesforce imposes limits on the number of API Calls that can be made. Therefore calculating this amount may be an important factor to consider. The Anypoint Template calls to the API can be calculated using the formula:
@@ -184,9 +185,9 @@ In the visual editor they can be found on the *Global Element* tab.
 ## businessLogic.xml<a name="businesslogicxml"/>
 Functional aspect of the Anypoint Template is implemented on this XML, directed by a batch job that will be responsible for creations/updates. The severeal message processors constitute four high level actions that fully implement the logic of this Anypoint Template:
 
-1. Job execution is invoked from triggerFlow (endpoints.xml) everytime there is a new query executed asking for created/updated Workers.
-2. During the Process stage, each Workers will be filtered depending on, if it has an existing matching User in the Salesforce.
-3. The last step of the Process stage will group the Users and create/update them in Salesforce. Finally during the On Complete stage the Anypoint Template will log output statistics data into the console.
+1. Job execution is invoked from triggerFlow (endpoints.xml) everytime there is a new query executed asking for updated Employees.
+2. During the Process stage, each Employee will be filtered depending on if it has an existing matching User in the Salesforce.
+3. The last step of the Process stage will group the Users and update them in Salesforce. Finally during the On Complete stage the Anypoint Template will log output statistics data into the console.
 
 
 
