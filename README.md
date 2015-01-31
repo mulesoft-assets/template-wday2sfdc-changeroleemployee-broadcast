@@ -1,5 +1,5 @@
 
-# Anypoint Template: Workday to Salesforce Change Role Worker Broadcast
+# Anypoint Template: Workday to Salesforce Change Role Employee Broadcast
 
 + [License Agreement](#licenseagreement)
 + [Use Case](#usecase)
@@ -73,7 +73,7 @@ There are no particular considerations for this Anypoint Template regarding Work
 
 
 # Run it! <a name="runit"/>
-Simple steps to get Workday to Salesforce Change Role Worker Broadcast running.
+Simple steps to get Workday to Salesforce Change Role Employee Broadcast running.
 
 
 ## Running on premise <a name="runonopremise"/>
