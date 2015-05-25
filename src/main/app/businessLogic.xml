@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
-	xmlns:json="http://www.mulesoft.org/schema/mule/json"
-	xmlns:wd-hr="http://www.mulesoft.org/schema/mule/wd-hr" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:tracking="http://www.mulesoft.org/schema/mule/ee/tracking"
+<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" 
+	  xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	  xmlns:json="http://www.mulesoft.org/schema/mule/json"
+	  xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc"
       xmlns="http://www.mulesoft.org/schema/mule/core"
       xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-      xmlns:spring="http://www.springframework.org/schema/beans"
-      version="EE-3.5.2"
+      version="EE-3.6.2"
       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
       xsi:schemaLocation="http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
-http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/ee/tracking http://www.mulesoft.org/schema/mule/ee/tracking/2.0/mule-tracking-ee.xsd
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
-http://www.mulesoft.org/schema/mule/wd-hr http://www.mulesoft.org/schema/mule/wd-hr/current/mule-wd-hr.xsd
 http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd">
 
 	<batch:job name="roleChangeBatch">
@@ -25,9 +22,9 @@ http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schem
 					doc:name="store result in record var 'userInSalesforce'">
 					<sfdc:query-single config-ref="Salesforce"
 						query="SELECT Id FROM User WHERE Email = '#[payload['Email']]'"
-						doc:name="query User in Salesforce" />
+						doc:name="Query User in Salesforce" />
 				</enricher>
-                <expression-component doc:name="set RoleId for upsert"><![CDATA[// Add target system ID as it is an update
+                <expression-component doc:name="Set RoleId for upsert"><![CDATA[// Add target system ID as it is an update
 payload.put('Id', recordVars['userInSalesforce']['Id']);
 rolesMap = ${wday.sfdc.rolesMap};
 payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
@@ -40,7 +37,7 @@ payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
 					</enricher>
                     <choice doc:name="Choice">
                         <when expression="#[!(flowVars['userPermissionSet'] is NullPayload)]">
-                            <data-mapper:transform config-ref="Result_To_UserId" doc:name="transform input arguments to values to create PermissionSet of the upserted user">
+                            <data-mapper:transform config-ref="Result_To_UserId" doc:name="Transform input arguments to values to create PermissionSet of the upserted user">
                                 <data-mapper:input-arguments>
                                     <data-mapper:input-argument key="AssigneeId">#[payload['Id']]</data-mapper:input-argument>
                                     <data-mapper:input-argument key="PermissionSetId">#[payload['RoleId']]</data-mapper:input-argument>
@@ -53,7 +50,7 @@ payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
 	                                </sfdc:ids>
 	                            </sfdc:delete>
 	                        </enricher>
-		                    <sfdc:upsert config-ref="Salesforce" externalIdFieldName="Id" type="PermissionSetAssignment" doc:name="upsert User's Permission Set Assignment in Salesforce">
+		                    <sfdc:upsert config-ref="Salesforce" externalIdFieldName="Id" type="PermissionSetAssignment" doc:name="Upsert User's Permission Set Assignment in Salesforce">
 		                        <sfdc:objects ref="#[payload]"/>
 		                    </sfdc:upsert>
                         </when>
@@ -64,13 +61,13 @@ payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
 							</enricher>
 	                        <choice doc:name="Choice">
 	                        	<when expression="#[(flowVars['userPermissionSet'] is NullPayload)]">
-		                            <data-mapper:transform config-ref="Result_To_UserId" doc:name="transform input arguments to values to create PermissionSet of the upserted user">
+		                            <data-mapper:transform config-ref="Result_To_UserId" doc:name="Transform input arguments to values to create PermissionSet of the upserted user">
 		                                <data-mapper:input-arguments>
 		                                    <data-mapper:input-argument key="AssigneeId">#[payload['Id']]</data-mapper:input-argument>
 		                                    <data-mapper:input-argument key="PermissionSetId">#[payload['RoleId']]</data-mapper:input-argument>
 		                                </data-mapper:input-arguments>
 		                            </data-mapper:transform>
-				                    <sfdc:upsert config-ref="Salesforce" externalIdFieldName="Id" type="PermissionSetAssignment" doc:name="upsert User's Permission Set Assignment in Salesforce">
+				                    <sfdc:upsert config-ref="Salesforce" externalIdFieldName="Id" type="PermissionSetAssignment" doc:name="Upsert User's Permission Set Assignment in Salesforce">
 				                        <sfdc:objects ref="#[payload]"/>
 				                    </sfdc:upsert>
 	                        	</when>
@@ -84,15 +81,15 @@ payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
 		</batch:process-records>
 		<batch:on-complete>
 			<json:object-to-json-transformer
-				doc:name="transform BatchJobInstance to JSON" />
-			<logger level="INFO" doc:name="log 'Migration process has finished'"
+				doc:name="Transform BatchJobInstance to JSON" />
+			<logger level="INFO" doc:name="Log 'Migration process has finished'"
 				message="Migration process has finished: #[payload]" />
 		</batch:on-complete>
 	</batch:job>
 
 
-    <flow name="roleChangeFlow" doc:name="roleChangeFlow">
-        <batch:execute name="roleChangeBatch" doc:name="trigger deactiviateUserBatch"/>
-        <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="catch Exception and call defaultExceptionStrategy"/>
+    <flow name="roleChangeFlow" >
+        <batch:execute name="roleChangeBatch" doc:name="Trigger deactiviateUserBatch"/>
+        <exception-strategy ref="defaultChoiceExceptionStrategy" doc:name="Catch Exception and call defaultExceptionStrategy"/>
     </flow>
 </mule>
