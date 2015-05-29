@@ -1,16 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:wd-hr="http://www.mulesoft.org/schema/mule/wd-hr" 
+<mule xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" xmlns:spring="http://www.springframework.org/schema/beans" xmlns:wd-hr="http://www.mulesoft.org/schema/mule/wd-hr" 
 	  xmlns="http://www.mulesoft.org/schema/mule/core" 
 	  xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
 	  version="EE-3.6.2"
 	  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	  xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/wd-hr http://www.mulesoft.org/schema/mule/wd-hr/current/mule-wd-hr.xsd">
+http://www.mulesoft.org/schema/mule/wd-hr http://www.mulesoft.org/schema/mule/wd-hr/current/mule-wd-hr.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
+    <data-mapper:config name="Map_To_ChangePersonalInformationRequestType" transformationGraphPath="map_to_changepersonalinformationrequesttype.grf" doc:name="Map_To_ChangePersonalInformationRequestType"/>
+    <sub-flow name="deletePermissionFlow">
+        <logger message="delete: #[payload]" level="INFO" doc:name="Logger"/>
+        <sfdc:delete config-ref="Salesforce" doc:name="Salesforce">
+            <sfdc:ids>
+            	<sfdc:id>#[payload['Id']]</sfdc:id>
+            </sfdc:ids>
+        </sfdc:delete>
+        <logger message="delete SFDC perm: #[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
+    <sub-flow name="queryPermissionFlow">
+        <sfdc:query config-ref="Salesforce" query="Select Id, p.PermissionSet.ProfileId, p.PermissionSetId, p.Assignee.Email, p.Assignee.Id From PermissionSetAssignment p where AssigneeId = '#[payload['Id']]' and PermissionSetId = '#[payload['RoleId']]'  and PermissionSet.ProfileId = null" doc:name="Salesforce"/>
+        <logger message="queried SFDC perms: #[payload]" level="INFO" doc:name="Logger"/>
+    </sub-flow>
 
-    <sub-flow name="queryWorkdayEmployeeFlow" doc:name="queryWorkdayEmployeeFlow">
+    
+    
+    <sub-flow name="queryWorkdayEmployeeFlow" >
         <processor-chain doc:name="Processor Chain">
-            <wd-hr:get-workers config-ref="WorkdayHumanResource" doc:name="Workday Human Resource" workersRequest-ref="#[org.mule.templates.ChangeRoleEmployeeRequest.create(payload, ${poll.frequencyMillis})]"/>
+            <wd-hr:get-workers config-ref="WorkdayHumanResource" doc:name="Workday Human Resource" workersRequest-ref="#[org.mule.templates.ChangeRoleEmployeeRequest.create(payload)]"/>
         </processor-chain>
+    </sub-flow>
+    <sub-flow name="updateWorkdayFlow">
+        <data-mapper:transform config-ref="Map_To_ChangePersonalInformationRequestType" doc:name="Map To ChangePersonalInformationRequestType"/>
+        <wd-hr:change-personal-information config-ref="WorkdayHumanResource" doc:name="Workday Human Resource"/>
     </sub-flow>
 </mule>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" 
+<mule xmlns:spring="http://www.springframework.org/schema/beans" xmlns:data-mapper="http://www.mulesoft.org/schema/mule/ee/data-mapper" 
 	  xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
 	  xmlns:json="http://www.mulesoft.org/schema/mule/json"
 	  xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc"
@@ -12,18 +12,18 @@
 http://www.mulesoft.org/schema/mule/json http://www.mulesoft.org/schema/mule/json/current/mule-json.xsd
 http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd
-http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd">
+http://www.mulesoft.org/schema/mule/ee/data-mapper http://www.mulesoft.org/schema/mule/ee/data-mapper/current/mule-data-mapper.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd">
 
 	<batch:job name="roleChangeBatch">
 		<batch:threading-profile poolExhaustedAction="WAIT" />
 		<batch:process-records>
+
 			<batch:step name="getUserInSalesforce" accept-expression="#[payload['RoleId'] != null]">
-				<enricher source="#[payload]" target="#[recordVars['userInSalesforce']]"
-					doc:name="store result in record var 'userInSalesforce'">
-					<sfdc:query-single config-ref="Salesforce"
-						query="SELECT Id FROM User WHERE Email = '#[payload['Email']]'"
-						doc:name="Query User in Salesforce" />
-				</enricher>
+                <enricher source="#[payload]" target="#[recordVars['userInSalesforce']]" doc:name="store result in record var 'userInSalesforce'">
+                    <sfdc:query-single config-ref="Salesforce" query="SELECT Id FROM User WHERE Email = '#[payload['Email']]'" doc:name="Query User in Salesforce"/>
+                </enricher>
+
                 <expression-component doc:name="Set RoleId for upsert"><![CDATA[// Add target system ID as it is an update
 payload.put('Id', recordVars['userInSalesforce']['Id']);
 rolesMap = ${wday.sfdc.rolesMap};
@@ -31,6 +31,7 @@ payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
 ]]></expression-component>
 			</batch:step>
 			<batch:step name="foreachChangeUserRoleInSalesforce" accept-expression="#[recordVars['userInSalesforce'] != null &amp;&amp; payload['RoleId'] != null]">
+
 					<enricher source="#[payload]" target="#[flowVars['userPermissionSet']]"
 						doc:name="store result in flow var 'userPermissionSet'" >
 	                     <sfdc:query-single config-ref="Salesforce" doc:name="Query if exist PermissionSet for another RoleId as the one provided" query="Select Id, p.PermissionSet.ProfileId, p.PermissionSetId, p.Assignee.Email, p.Assignee.Id From PermissionSetAssignment p where AssigneeId = '#[payload['Id']]' and PermissionSetId != '#[payload['RoleId']]'  and PermissionSet.ProfileId = null"/>
@@ -72,7 +73,7 @@ payload.put('RoleId', rolesMap.get( payload['RoleId'] ));
 				                    </sfdc:upsert>
 	                        	</when>
 		                        <otherwise>
-			                        <logger level="INFO" doc:name="Nothing to do"/>
+			                        <logger level="INFO" doc:name="Nothing to do" message="aaaaaaaaaaaaaaaaa"/>
 		                        </otherwise>
 	                        </choice>
 	                    </otherwise>

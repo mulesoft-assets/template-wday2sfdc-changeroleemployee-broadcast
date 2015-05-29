@@ -8,7 +8,6 @@ package org.mule.templates;
 
 import java.text.ParseException;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -23,21 +22,17 @@ import com.workday.hr.WorkerResponseGroupType;
 
 public class ChangeRoleEmployeeRequest {
 
-	public static GetWorkersRequestType create(Date startDate, int periodInMillis) throws ParseException, DatatypeConfigurationException {
+	public static GetWorkersRequestType create(GregorianCalendar startDate) throws ParseException, DatatypeConfigurationException {
 
 		/*
 		 * Set data range for events
 		 */
-        EffectiveAndUpdatedDateTimeDataType dateRangeData = new EffectiveAndUpdatedDateTimeDataType();
-
-		Calendar cal = Calendar.getInstance();
-		cal.setTime(startDate);
-		cal.add(Calendar.SECOND, - periodInMillis / 1000);
-
-        dateRangeData.setUpdatedFrom(xmlDate(cal.getTime()));
-        dateRangeData.setUpdatedThrough(xmlDate(startDate));
-
-		/*
+		EffectiveAndUpdatedDateTimeDataType dateRangeData = new EffectiveAndUpdatedDateTimeDataType();
+	    GregorianCalendar current = new GregorianCalendar();
+	    current.add(Calendar.SECOND, -1);
+	    dateRangeData.setUpdatedFrom(getXMLGregorianCalendar(startDate));
+	    dateRangeData.setUpdatedThrough(getXMLGregorianCalendar(current));
+	    /*
 		 * Set event type criteria filter
 		 */
         TransactionLogCriteriaType transactionLogCriteria = new TransactionLogCriteriaType();
@@ -63,9 +58,7 @@ public class ChangeRoleEmployeeRequest {
 		return getWorkersType;
 	}
 
-	private static XMLGregorianCalendar xmlDate(Date date) throws DatatypeConfigurationException {
-		GregorianCalendar gregorianCalendar = (GregorianCalendar) GregorianCalendar.getInstance();
-		gregorianCalendar.setTime(date);
-		return DatatypeFactory.newInstance().newXMLGregorianCalendar(gregorianCalendar);
+	private static XMLGregorianCalendar getXMLGregorianCalendar(GregorianCalendar date) throws DatatypeConfigurationException {
+		return DatatypeFactory.newInstance().newXMLGregorianCalendar(date);
 	}
 }

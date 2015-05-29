@@ -6839,6 +6839,7 @@
 <Field __artificialType="_id" __systemManaged="true" name="__id" type="string"/>
 <Field __index="0" __sourcePath="{}/user-map/Email" containerType="SINGLE" label="Email" name="Email" type="string"/>
 <Field __sourcePath="{}/user-map/RoleId" containerType="SINGLE" label="RoleId" name="PositionId" type="string"/>
+<Field __dmType="Calendar" __sourcePath="{}/user-map/LastModifiedDate" containerType="SINGLE" label="LastModifiedDate" name="LastModifiedDate" type="string"/>
 </Record>
 </Metadata>
 <Metadata __index="1520" __referenceCounter="0" __sourcePath="{}/object/responseData/worker/workerData/personalData/identificationData/visaID" _dataStructure="SINGLE_DIMENSIONAL_COLLECTION" _id="__id" _metadataParentId="5b093719-c3c6-4e3d-a24d-c7cdeb5d3542" _parent_id="__parent_id" _type="Input" id="f939af7a-3840-4f75-a292-4313a3387bb4">
@@ -7284,6 +7285,7 @@
 <Entry dictval.__javaType="java.lang.String" id="DictionaryEntry5" input="true" name="TimeZoneSidKey" output="false" type="string"/>
 <Entry dictval.__javaType="java.lang.String" id="DictionaryEntry6" input="true" name="Alias" output="false" type="string"/>
 <Entry dictval.__javaType="java.lang.String" id="DictionaryEntry7" input="true" name="Username" output="false" type="string"/>
+<Entry dictval.__javaType="javax.xml.datatype.XMLGregorianCalendar" id="DictionaryEntry8" input="true" name="UpdatedThrough" output="false" type="object"/>
 </Dictionary>
 </Global>
 <Phase number="0">
@@ -11260,7 +11262,8 @@
 output.__id = input.__id;
 //END -> DO NOT REMOVE
 output.Email = input.Email;
-output.PositionId = input.RoleId;]]></attr>
+output.PositionId = input.RoleId;
+output.LastModifiedDate = inputArguments.UpdatedThrough;]]></attr>
 </Node>
 <Node cacheInMemory="true" enabled="enabled" fileURL="dict:outputPayload" guiName="Map&lt;k,v&gt; WRITER" guiX="900" guiY="20" id="MAP_WRITER0" type="MAP_WRITER">
 <attr name="mapping"><![CDATA[<?xml version="1.0" encoding="UTF-8"?>
@@ -11268,6 +11271,7 @@ output.PositionId = input.RoleId;]]></attr>
   <item clover:inPort="0">
     <Email>$0.Email</Email>
     <RoleId>$0.PositionId</RoleId>
+    <LastModifiedDate clover:dataType="java.util.Calendar">$0.LastModifiedDate</LastModifiedDate>
   </item>
 </clover:collection>]]></attr>
 <attr name="_data_format"><![CDATA[MAP]]></attr>
