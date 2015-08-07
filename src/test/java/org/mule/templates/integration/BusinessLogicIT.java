@@ -104,8 +104,6 @@ public class BusinessLogicIT extends AbstractTemplateTestCase {
     private void prepareWdayData() throws MuleException, Exception {    	
     	Map<String, Object> user = new HashMap<String, Object>();
     	Random r = new Random();
-    	Calendar c = Calendar.getInstance();
-    	c.setTimeInMillis(r.nextLong());
     	user.put("date", "2000" + "/" + (r.nextInt(12) + 1) + "/" + (r.nextInt(28) + 1));    	
     	user.put("id", WORKDAY_WORKER_ID);    	
     	logger.info("Updating workday worker: " + user);
