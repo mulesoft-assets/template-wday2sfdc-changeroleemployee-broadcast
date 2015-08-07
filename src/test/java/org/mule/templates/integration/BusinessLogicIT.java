@@ -35,7 +35,7 @@ import com.mulesoft.module.batch.BatchTestHelper;
  */
 public class BusinessLogicIT extends AbstractTemplateTestCase {
 
-    private static final long TIMEOUT_MILLIS = 60000;
+    private static final long TIMEOUT_MILLIS = 120000;
     private static final long DELAY_MILLIS = 500;
 	private static String WORKDAY_WORKER_ID;
     private BatchTestHelper helper;
