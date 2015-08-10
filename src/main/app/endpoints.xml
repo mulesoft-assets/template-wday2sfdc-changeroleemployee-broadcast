@@ -45,14 +45,13 @@ http://www.mulesoft.org/schema/mule/ee/dw http://www.mulesoft.org/schema/mule/ee
 }]]></dw:set-payload>
                 </dw:transform-message>
                 <wd-hr:get-workers config-ref="WorkdayHumanResource" doc:name="Get Workers from Workday Human Resource"/>
-                <logger message="Test 0" level="INFO" doc:name="Logger"/>
 
 
 			</processor-chain>
 		</poll>
-        <logger message="Test 1" level="INFO" doc:name="Logger"/>
+
 		<set-variable doc:name="Set updatedThrough" value="#[payload.requestCriteria.transactionLogCriteriaData[0].transactionDateRangeData.updatedThrough]" variableName="updatedThrough" />
-        <logger message="Test 2" level="INFO" doc:name="Logger"/>
+
         <dw:transform-message doc:name="Workday workers to Salesforce users">
             <dw:set-payload><![CDATA[%dw 1.0
 %output application/java
@@ -63,9 +62,9 @@ payload.responseData.worker.workerData map {
 		when $.roleData != null otherwise null
 } unless (payload.responseData is :null) otherwise []]]></dw:set-payload>
         </dw:transform-message>
-        <logger message="Test 3" level="INFO" doc:name="Logger"/>
+
         <expression-filter expression="#[payload.size() &gt; 0]" doc:name="Filter empty result set"/>
-        <logger message="Test 4 - #[payload.size()]" level="INFO" doc:name="Logger"/>
+
 		<custom-transformer class="org.mule.templates.FilterDuplicateUsersTransformer" doc:name="Filter duplicate users"/>        
         <flow-ref name="roleChangeFlow" doc:description="roleChangeFlow"  doc:name="Trigger roleChangeFlow"/>
     </flow>
