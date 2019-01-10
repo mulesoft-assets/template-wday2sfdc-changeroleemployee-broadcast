@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+    xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd">
+
+    <flow name="businessLogicFlow" doc:id="8759532e-79b7-4789-990c-dc8e162bfd67">
+        <batch:job jobName="migrateEmployeesBatch" doc:id="204892ae-0d97-4326-beae-310c8d52b7a6">
+            <batch:process-records>
+                <batch:step name="foreachEmployeeInWorkdayGetEmployeeInSalesforceStep" doc:id="89713774-362a-4e92-9bdc-41e31802bf38">
+					<salesforce:query-single doc:name="Query User in Salesforce" doc:id="7efb3121-9872-4282-ad2a-6b19e91324ba" config-ref="Salesforce_Sfdc_config" target="userInSalesforce">
+						<salesforce:salesforce-query >SELECT Id FROM User WHERE Email = ':email'</salesforce:salesforce-query>
+						<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"email" : payload.Email
+}]]]></salesforce:parameters>
+					</salesforce:query-single>
+					<set-variable value="#[${wday.sfdc.rolesMap}]" doc:name="Set rolesMap from properties" doc:id="5a03f7df-c8c1-4ea1-81de-847ba4e7c521" variableName="rolesMap"/>
+					<ee:transform doc:name="Set RoleId for upsert" doc:id="cda97175-b63e-4da7-8852-b25f09803dd9" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	// Add target system ID as it is an update
+	Id: vars.userInSalesforce.Id,
+	RoleId: if(payload.RoleId != null) vars.rolesMap[payload.RoleId] else null
+}]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+            </batch:step>
+            <batch:step name="foreachEmployeeInWorkdayUpsertEmployeeInSalesforceStep" doc:id="78a74ab4-9b91-416d-985a-acda2ac377eb" acceptExpression="payload.Id !=null and payload.RoleId != null">
+					<salesforce:query-single doc:name="Query if exist PermissionSet for another RoleId as the one provided" doc:id="b0eb33d1-6971-407a-a6bd-b7129ba5bba8" config-ref="Salesforce_Sfdc_config" target="userPermissionSet">
+						<salesforce:salesforce-query >Select Id, p.PermissionSet.ProfileId, p.PermissionSetId, p.Assignee.Email, p.Assignee.Id From PermissionSetAssignment p where AssigneeId = ':id' and PermissionSetId != ':roleId'  and PermissionSet.ProfileId = null</salesforce:salesforce-query>
+						<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"id" : payload.Id,
+	"roleId" : payload.RoleId
+}]]]></salesforce:parameters>
+					</salesforce:query-single>
+					<choice doc:name="Choice" doc:id="69c16811-020e-4f59-aa7d-9869b2340718" >
+						<when expression="#[sizeOf(vars.userPermissionSet) &gt; 0]">
+							<ee:transform doc:name="Transform input arguments to values to create PermissionSet of the upserted User" doc:id="1882052f-4460-4e2a-9822-264ac894cd9e" >
+								<ee:message >
+									<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	"AssigneeId" : payload.Id,
+	"PermissionSetId": payload.RoleId
+}]]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<salesforce:delete doc:name="Delete" doc:id="70591d43-608e-4cc0-bd77-f0f15f15a27e" config-ref="Salesforce_Sfdc_config" target="permissionSetDeleted">
+								<salesforce:delete-ids ><![CDATA[#[vars.userPermissionSet.Id]]]></salesforce:delete-ids>
+							</salesforce:delete>
+							<salesforce:upsert type="PermissionSetAssignment" doc:name="Upsert User's Permission Set Assignment in Salesforce" doc:id="cbd9d6e8-4e1a-4ee6-9c84-13b8826ddd6b" config-ref="Salesforce_Sfdc_config" externalIdFieldName="Id"/>
+						</when>
+						<otherwise >
+							<salesforce:query-single doc:name="Query if exist PermissionSet for user" doc:id="48907963-16b3-4a16-a4aa-120b11ff5c26" config-ref="Salesforce_Sfdc_config" target="userPermissionSet">
+								<salesforce:salesforce-query >Select Id, p.PermissionSet.ProfileId, p.PermissionSetId, p.Assignee.Email, p.Assignee.Id From PermissionSetAssignment p where AssigneeId = ':id' and PermissionSetId = ':roleId'  and PermissionSet.ProfileId = null</salesforce:salesforce-query>
+								<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	"id" : payload.Id,
+	"roleId" : payload.RoleId
+}]]]></salesforce:parameters>
+							</salesforce:query-single>
+							<choice doc:name="Choice" doc:id="94f72a63-d6b0-4d05-8195-5caeee063346" >
+								<when expression="#[sizeOf(vars.userPermissionSet) &gt; 0]">
+									<ee:transform doc:name="Transform input arguments to values to create PermissionSet of the upserted User" doc:id="16c0e544-8384-41b9-97eb-73f3a91e70c4" >
+										<ee:message >
+											<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[{
+	"AssigneeId" : payload.Id,
+	"PermissionSetId": payload.RoleId
+}]]]></ee:set-payload>
+										</ee:message>
+									</ee:transform>
+									<salesforce:upsert doc:name="Upsert User's Permission Set Assignment in Salesforce" doc:id="1d12216f-812b-4ad1-9394-84aabfbe34e9" config-ref="Salesforce_Sfdc_config" externalIdFieldName="Id" type="PermissionSetAssignment"/>
+								</when>
+								<otherwise >
+									<logger level="INFO" doc:name="Nothing to do" doc:id="f4d8536a-8630-471c-a709-4d12730eb087" />
+								</otherwise>
+							</choice>
+						</otherwise>
+					</choice>
+            </batch:step>
+        </batch:process-records>
+        <batch:on-complete>
+            <ee:transform doc:name="Prepare migration result" doc:id="c84b4bc4-5a65-41c1-9d0c-f1ebd3d8db7a">
+                <ee:message>
+                    <ee:set-payload><![CDATA[%dw 2.0
+output text/plain
+---
+"Migration Report: \n"
+
+++ "\n Time [milliseconds]: " 		++ payload.elapsedTimeInMillis!
+++ "\n Total Records: "				++ payload.totalRecords!
+++ "\n Successful Records: "		++ payload.successfulRecords!
+++ "\n Failed Records: "			++ payload.failedRecords!
+++ "\n Loaded Records: "			++ payload.loadedRecords!
+++ "\n Processed Records: " 		++ payload.processedRecords!]]></ee:set-payload>
+                </ee:message>
+            </ee:transform>
+            <logger level="INFO" doc:name="Migration process has finished!" doc:id="b7575d38-7dbd-4602-9186-1bbb25234896" message="Migration process has finished: #[payload]" />
+        </batch:on-complete>
+    </batch:job>
+</flow>
+
+</mule>
+
+
+        
