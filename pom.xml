@@ -12,7 +12,23 @@
     <packaging>mule-application</packaging>
     <version>2.1.1-SNAPSHOT</version>
     <name>template-wday2sfdc-changeroleemployee-broadcast</name>
-
+    
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.mule.tools.maven</groupId>
+                <artifactId>mule-maven-plugin</artifactId>
+                <version>${mule.maven.plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <sharedLibraries>
+                    </sharedLibraries>
+                    <classifier>mule-application-template</classifier>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+    
     <dependencies>
         <dependency>
             <groupId>com.mulesoft.connectors</groupId>

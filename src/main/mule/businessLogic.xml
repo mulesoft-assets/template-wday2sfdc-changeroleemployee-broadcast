@@ -44,7 +44,7 @@ output application/java
 }]]]></salesforce:parameters>
 					</salesforce:query-single>
 					<choice doc:name="Choice" doc:id="69c16811-020e-4f59-aa7d-9869b2340718" >
-						<when expression="#[sizeOf(vars.userPermissionSet) &gt; 0]">
+						<when expression="#[not isEmpty(vars.userPermissionSet)]">
 							<ee:transform doc:name="Transform input arguments to values to create PermissionSet of the upserted User" doc:id="1882052f-4460-4e2a-9822-264ac894cd9e" >
 								<ee:message >
 									<ee:set-payload ><![CDATA[%dw 2.0
@@ -72,7 +72,7 @@ output application/java
 }]]]></salesforce:parameters>
 							</salesforce:query-single>
 							<choice doc:name="Choice" doc:id="94f72a63-d6b0-4d05-8195-5caeee063346" >
-								<when expression="#[sizeOf(vars.userPermissionSet) &gt; 0]">
+								<when expression="#[not isEmpty(vars.userPermissionSet)]">
 									<ee:transform doc:name="Transform input arguments to values to create PermissionSet of the upserted User" doc:id="16c0e544-8384-41b9-97eb-73f3a91e70c4" >
 										<ee:message >
 											<ee:set-payload ><![CDATA[%dw 2.0
