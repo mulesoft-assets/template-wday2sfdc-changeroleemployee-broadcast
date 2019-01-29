@@ -143,7 +143,7 @@ To use this template, configure properties such as credentials, configurations, 
 + sfdc.securityToken `1234fdkfdkso20kw2sd`
 
 **Roles Map**
-+ wday.sfdc.rolesMap `['SOME_ROLE_IN_WDAY': 'SOME_ROLE_IN_SF', 'ANOTHER_ROLE_IN_WDAY': 'ANOTHER_ROLE_IN_SF' ]`
++ wday.sfdc.rolesMap `{'SOME_ROLE_IN_WDAY': 'SOME_ROLE_IN_SF', 'ANOTHER_ROLE_IN_WDAY': 'ANOTHER_ROLE_IN_SF' }`
 <!-- Application Configuration (end) -->
 
 # API Calls

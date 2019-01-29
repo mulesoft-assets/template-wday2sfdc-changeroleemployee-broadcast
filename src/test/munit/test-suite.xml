@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting"
+	xmlns:workday="http://www.mulesoft.org/schema/mule/workday" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd 
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/workday http://www.mulesoft.org/schema/mule/workday/current/mule-workday.xsd">
+	<munit:config name="test-suite.xml" />
+	<configuration-properties doc:name="Configuration properties"
+		doc:id="8f3d5aca-3fa9-46c1-9fc4-572a0bab4c41" file="mule.test.properties" />
+	<munit:before-test name="test-suiteBefore_Test"
+		description="Before tests actions" doc:id="fd7066ba-976a-494c-aec4-ddc46e1c8b35">
+		<ee:transform doc:name="Prepare query for Wday"
+			doc:id="2e8fe887-5d1b-49ac-9b9f-9031e6ea7970">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/xml
+ns ns0 urn:com.workday/bsvc
+---
+{
+	ns0#Get_Workers_Request: {
+		ns0#Request_References: {
+			ns0#Worker_Reference : {
+				ns0#ID @(ns0#"type": "Employee_ID" ): p('wday.employee.id')
+			}
+		},
+		ns0#Request_Criteria: {
+			ns0#Exclude_Inactive_Workers: true
+		},
+		ns0#Response_Group: {
+			ns0#Include_Personal_Information: true
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<workday:human-resources operation="Get_Workers"
+			doc:name="Load test data from Workday" doc:id="2b3631d6-ab76-477b-a86e-4fccdb613bd0"
+			config-ref="Workday_Config" target="workerInWday"
+			targetValue="#[output application/json --- payload]" />
+		<ee:transform doc:name="Prepare data for SFDC and remember Email"
+			doc:id="9cfa4df4-4095-4d98-8607-0894ddd9bd21">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="email"><![CDATA[%dw 2.0
+output application/java
+---
+vars.workerInWday.Get_Workers_Response.Response_Data.Worker.Worker_Data.Personal_Data.Contact_Data.Email_Address_Data.Email_Address]]></ee:set-variable>
+				<ee:set-variable variableName="SFDCUserToBroadcast"><![CDATA[%dw 2.0
+output application/java
+---
+if (vars.workerInWday.Get_Workers_Response.Response_Data != null) 
+	(vars.workerInWday.Get_Workers_Response.Response_Data.*Worker map (worker) -> {
+		Email: if (worker.Worker_Data.Personal_Data.Contact_Data.Email_Address_Data != null) worker.Worker_Data.Personal_Data.Contact_Data.Email_Address_Data.Email_Address else null,
+		RoleId: p('wday.role.id')
+	}) distinctBy $
+else []]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</munit:before-test>
+	<munit:test name="test-suiteTest" description="MUnit Test"
+		doc:id="07614da5-372d-45d8-b7d4-abbc60ad3a18">
+		<munit:execution>
+			<ee:transform doc:name="Prepare data for business logic"
+				doc:id="5369769c-2334-4e95-bf43-ff7f70e86abb">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.SFDCUserToBroadcast]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<flow-ref doc:name="Call businessLogicFlow" doc:id="1ba271bb-11ce-4ed0-8089-e68dae7ed058"
+				name="businessLogicFlow" />
+			<scripting:execute engine="groovy"
+				doc:name="Sleep for 30s until the processing is completed" doc:id="d8a6aecb-f975-4494-a7a5-556b686e7535">
+				<scripting:code>sleep(30000)</scripting:code>
+			</scripting:execute>
+		</munit:execution>
+		<munit:validation>
+			<munit-tools:verify-call doc:name="salesforce:query-single" doc:id="ac450b3c-38d4-43e7-852f-09bae3c89a91" processor="salesforce:query-single" times="3">
+			</munit-tools:verify-call>
+			<munit-tools:verify-call doc:name="salesforce:upsert"
+				doc:id="b9bf2455-33f2-4c34-8b91-e71d93575c68" processor="salesforce:upsert"
+				times="0" />
+			<munit-tools:verify-call doc:name="salesforce:delete" doc:id="32cd6b73-4d38-4d85-b3b7-64e851d25557" processor="salesforce:delete" times="0"/>
+		</munit:validation>
+	</munit:test>
+</mule>
