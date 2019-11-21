@@ -19,7 +19,7 @@ http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mu
 	"email" : payload.Email
 }]]]></salesforce:parameters>
 					</salesforce:query-single>
-					<set-variable value="#[${wday.sfdc.rolesMap}]" doc:name="Set rolesMap from properties" doc:id="5a03f7df-c8c1-4ea1-81de-847ba4e7c521" variableName="rolesMap"/>
+					<set-variable value="#[read(p('wday.sfdc.rolesMap'))]" doc:name="Set rolesMap from properties" doc:id="5a03f7df-c8c1-4ea1-81de-847ba4e7c521" variableName="rolesMap"/>
 					<ee:transform doc:name="Set RoleId for upsert" doc:id="cda97175-b63e-4da7-8852-b25f09803dd9" >
 						<ee:message >
 							<ee:set-payload ><![CDATA[%dw 2.0
