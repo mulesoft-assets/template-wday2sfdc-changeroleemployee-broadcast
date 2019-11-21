@@ -5,14 +5,14 @@
     <parent>
         <groupId>org.mule.templates</groupId>
         <artifactId>templates-tooling-parent-pom</artifactId>
-        <version>2.1.17</version>
+        <version>2.1.24</version>
     </parent>
 
     <artifactId>template-wday2sfdc-changeroleemployee-broadcast</artifactId>
     <packaging>mule-application</packaging>
     <version>2.1.2-SNAPSHOT</version>
     <name>template-wday2sfdc-changeroleemployee-broadcast</name>
-    
+
     <build>
         <plugins>
             <plugin>
@@ -26,7 +26,7 @@
                     <classifier>mule-application-template</classifier>
                 </configuration>
             </plugin>
-        <plugin>
+            <plugin>
                 <groupId>com.mulesoft.munit.tools</groupId>
                 <artifactId>munit-maven-plugin</artifactId>
                 <version>${munit.version}</version>
@@ -51,7 +51,7 @@
             </plugin>
         </plugins>
     </build>
-    
+
     <dependencies>
         <dependency>
             <groupId>com.mulesoft.connectors</groupId>
@@ -73,8 +73,8 @@
             <artifactId>mule-scripting-module</artifactId>
             <classifier>mule-plugin</classifier>
             <scope>test</scope>
-        </dependency>          
-    	<dependency>
+        </dependency>
+        <dependency>
             <groupId>com.mulesoft.munit</groupId>
             <artifactId>munit-runner</artifactId>
             <classifier>mule-plugin</classifier>
@@ -102,4 +102,10 @@
             <layout>default</layout>
         </repository>
     </repositories>
-<scm><connection>scm:git:git@github.com:mulesoft/template-wday2sfdc-changeroleemployee-broadcast.git</connection><developerConnection>scm:git:git@github.com:mulesoft/template-wday2sfdc-changeroleemployee-broadcast.git</developerConnection><url>https://github.com/mulesoft/template-wday2sfdc-changeroleemployee-broadcast</url><tag>HEAD</tag></scm></project>
+    <scm>
+        <connection>scm:git:git@github.com:mulesoft/template-wday2sfdc-changeroleemployee-broadcast.git</connection>
+        <developerConnection>scm:git:git@github.com:mulesoft/template-wday2sfdc-changeroleemployee-broadcast.git</developerConnection>
+        <url>https://github.com/mulesoft/template-wday2sfdc-changeroleemployee-broadcast</url>
+        <tag>HEAD</tag>
+    </scm>
+</project>
